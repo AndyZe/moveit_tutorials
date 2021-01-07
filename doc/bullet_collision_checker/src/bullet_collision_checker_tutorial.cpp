@@ -286,20 +286,14 @@ int main(int argc, char** argv)
   planning_scene->checkCollision(req, res);
   ROS_INFO_STREAM_NAMED("bullet_tutorial", (res.collision ? "In collision." : "Not in collision."));
 
-  visual_tools.prompt("Press 'next' to perform a distance check on a single link.");
-
   // BEGIN_SUB_TUTORIAL CCD_2
-  // Perform a distance check for a specific group.
-  collision_detection::DistanceRequest distance_req;
-  distance_req.type = collision_detection::DistanceRequestTypes::GLOBAL;
-  distance_req.enable_signed_distance = true;
-  distance_req.distance_threshold = 0.1;  // [meters] Ignore distances with higher values
-  distance_req.group_name = robot_model->getJointModelGroupNames().at(0);
-  distance_req.enableGroup(robot_model);
-  collision_detection::DistanceResult distance_res;
+  // Perform a distance check for a specific link
+  visual_tools.prompt("Press 'next' to perform a distance check on a single link.");
+  res.clear();
+  req.distance = true;
 
-  planning_scene->getCollisionEnv()->distanceRobot(distance_req, distance_res, state);
-  ROS_ERROR_STREAM(distance_res.minimum_distance.distance);
+  planning_scene->getCollisionEnv()->checkRobotCollision(req, res, state);
+  ROS_INFO_STREAM("Collision distance: " << res.distance);
   // END_SUB_TUTORIAL
 
   // BEGIN_SUB_TUTORIAL CCD_3
