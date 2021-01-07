@@ -287,13 +287,22 @@ int main(int argc, char** argv)
   ROS_INFO_STREAM_NAMED("bullet_tutorial", (res.collision ? "In collision." : "Not in collision."));
 
   // BEGIN_SUB_TUTORIAL CCD_2
-  // Perform a distance check for a specific link
+  // Perform several types of distance checks
   visual_tools.prompt("Press 'next' to perform a distance check on a single link.");
-  res.clear();
   req.distance = true;
 
+  // First check the distance for all links
+  res.clear();
   planning_scene->getCollisionEnv()->checkRobotCollision(req, res, state);
-  ROS_INFO_STREAM("Collision distance: " << res.distance);
+  ROS_INFO_STREAM("Collision distance for all links: " << res.distance);
+
+  // Now check for a few specific links
+  std::string check_this_link = "panda_link8";
+  std::vector<std::string> check_against_links;
+  check_against_links.push_back("panda_link0");
+  res.clear();
+  planning_scene->getCollisionEnv()->checkRobotCollision(req, res, state, check_this_link, check_against_links);
+  ROS_INFO_STREAM("Collision distance between specific links: " << res.distance);
   // END_SUB_TUTORIAL
 
   // BEGIN_SUB_TUTORIAL CCD_3
