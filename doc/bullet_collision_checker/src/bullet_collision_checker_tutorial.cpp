@@ -286,10 +286,26 @@ int main(int argc, char** argv)
   planning_scene->checkCollision(req, res);
   ROS_INFO_STREAM_NAMED("bullet_tutorial", (res.collision ? "In collision." : "Not in collision."));
 
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to perform a CCD check.");
+  visual_tools.prompt("Press 'next' to perform a distance check on a single link.");
 
   // BEGIN_SUB_TUTORIAL CCD_2
+  // Perform a distance check for a specific group.
+  collision_detection::DistanceRequest distance_req;
+  distance_req.type = collision_detection::DistanceRequestTypes::GLOBAL;
+  distance_req.enable_signed_distance = true;
+  distance_req.distance_threshold = 0.1;  // [meters] Ignore distances with higher values
+  distance_req.group_name = robot_model->getJointModelGroupNames().at(0);
+  distance_req.enableGroup(robot_model);
+  collision_detection::DistanceResult distance_res;
+
+  planning_scene->getCollisionEnv()->distanceRobot(distance_req, distance_res, state);
+  ROS_ERROR_STREAM(distance_res.minimum_distance.distance);
+  // END_SUB_TUTORIAL
+
+  // BEGIN_SUB_TUTORIAL CCD_3
   // For the CCD check, we display both robot states at the same time.
+  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to perform a continuous collision check.");
+  ROS_INFO_STREAM_NAMED("bullet_tutorial", "A continuous collision check is performed along the entire trajectory between two states.");
   moveit_msgs::DisplayRobotState msg_state_before;
   robot_state::robotStateToRobotStateMsg(state_before, msg_state_before.state);
   robot_state_publisher_2.publish(msg_state_before);
