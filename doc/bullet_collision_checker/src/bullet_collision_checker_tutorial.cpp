@@ -301,7 +301,7 @@ int main(int argc, char** argv)
   std::vector<std::string> check_against_links;
   check_against_links.push_back("panda_link0");
   res.clear();
-  planning_scene->getCollisionEnv()->checkRobotCollision(req, res, state, check_this_link, check_against_links);
+  planning_scene->getCollisionEnv()->checkSpecificLinkCollision(req, res, state, check_this_link, check_against_links);
   ROS_INFO_STREAM("Collision distance between specific links: " << res.distance);
   // END_SUB_TUTORIAL
 
