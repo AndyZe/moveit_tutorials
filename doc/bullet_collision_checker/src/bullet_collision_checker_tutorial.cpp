@@ -288,21 +288,22 @@ int main(int argc, char** argv)
 
   // BEGIN_SUB_TUTORIAL CCD_2
   // Perform several types of distance checks
-  visual_tools.prompt("Press 'next' to perform a distance check on a single link.");
+  visual_tools.prompt("Press 'next' to perform a distance check on the entire robot.");
   req.distance = true;
 
   // First check the distance for all links
   res.clear();
+  // Empty group name means the entire robot will be checked
+  req.group_name = "";
   planning_scene->getCollisionEnv()->checkRobotCollision(req, res, state);
   ROS_INFO_STREAM("Collision distance for all links: " << res.distance);
 
-  // Now check for a few specific links
-  std::string check_this_link = "panda_link8";
-  std::vector<std::string> check_against_links;
-  check_against_links.push_back("panda_link0");
+  // Now check for a specific link
+  visual_tools.prompt("Press 'next' to perform a distance check for the hand only.");
+  req.group_name = "hand";
   res.clear();
-  planning_scene->getCollisionEnv()->checkSpecificLinkCollision(req, res, state, check_this_link, check_against_links);
-  ROS_INFO_STREAM("Collision distance between specific links: " << res.distance);
+  planning_scene->checkCollision(req, res);
+  ROS_INFO_STREAM("Collision distance for the hand group only: " << res.distance);
   // END_SUB_TUTORIAL
 
   // BEGIN_SUB_TUTORIAL CCD_3
