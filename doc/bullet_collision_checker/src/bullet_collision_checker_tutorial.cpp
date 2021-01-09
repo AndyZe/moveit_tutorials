@@ -34,9 +34,10 @@
 
 /* Author: Acorn Pooley, Michael Lautman, Jens Petit */
 
-#include <ros/ros.h>
-#include "interactivity/interactive_robot.h"
-#include "interactivity/pose_string.h"
+#include <chrono>  // For runtime measurement
+#include <ctime>  // For runtime measurement
+#include <interactivity/interactive_robot.h>
+#include <interactivity/pose_string.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
@@ -45,6 +46,7 @@
 #include <moveit/collision_detection_bullet/collision_detector_allocator_bullet.h>
 #include <moveit/collision_detection/collision_tools.h>
 #include <moveit/robot_state/conversions.h>
+#include <ros/ros.h>
 #include <tf2_eigen/tf2_eigen.h>
 #include <moveit/utils/robot_model_test_utils.h>
 
@@ -295,15 +297,23 @@ int main(int argc, char** argv)
   res.clear();
   // Empty group name means the entire robot will be checked
   req.group_name = "";
+  std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
   planning_scene->getCollisionEnv()->checkRobotCollision(req, res, state);
+  std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
   ROS_INFO_STREAM("Collision distance for all links: " << res.distance);
+  std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+  ROS_INFO_STREAM("Collision check runtime: " << time_span.count());
 
   // Now check for a specific link
   visual_tools.prompt("Press 'next' to perform a distance check for the hand only.");
   req.group_name = "hand";
   res.clear();
+  t1 = std::chrono::high_resolution_clock::now();
   planning_scene->checkCollision(req, res);
+  t2 = std::chrono::high_resolution_clock::now();
   ROS_INFO_STREAM("Collision distance for the hand group only: " << res.distance);
+  time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+  ROS_INFO_STREAM("Collision check runtime: " << time_span.count());
   // END_SUB_TUTORIAL
 
   // BEGIN_SUB_TUTORIAL CCD_3
