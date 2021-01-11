@@ -96,24 +96,8 @@ void publishMarkers(visualization_msgs::MarkerArray& markers)
     g_marker_array_publisher->publish(g_collision_points);
 }
 
-void computeCollisionContactPoints(InteractiveRobot& robot)
+void visualizeContactPoints(const collision_detection::CollisionResult& c_res)
 {
-  // move the world geometry in the collision world
-  Eigen::Isometry3d world_cube_pose;
-  double world_cube_size;
-  robot.getWorldGeometry(world_cube_pose, world_cube_size);
-  g_planning_scene->getWorldNonConst()->moveShapeInObject("world_cube", g_world_cube_shape, world_cube_pose);
-
-  collision_detection::CollisionRequest c_req;
-  collision_detection::CollisionResult c_res;
-  c_req.group_name = robot.getGroupName();
-  c_req.contacts = true;
-  c_req.max_contacts = 100;
-  c_req.max_contacts_per_pair = 5;
-  c_req.verbose = false;
-
-  g_planning_scene->checkCollision(c_req, c_res, *robot.robotState());
-
   if (c_res.collision)
   {
     ROS_INFO("COLLIDING contact_point_count=%d", (int)c_res.contact_count);
@@ -141,6 +125,27 @@ void computeCollisionContactPoints(InteractiveRobot& robot)
     visualization_msgs::MarkerArray empty_marker_array;
     publishMarkers(empty_marker_array);
   }
+}
+
+void computeCollisionContactPoints(InteractiveRobot& robot)
+{
+  // move the world geometry in the collision world
+  Eigen::Isometry3d world_cube_pose;
+  double world_cube_size;
+  robot.getWorldGeometry(world_cube_pose, world_cube_size);
+  g_planning_scene->getWorldNonConst()->moveShapeInObject("world_cube", g_world_cube_shape, world_cube_pose);
+
+  collision_detection::CollisionRequest c_req;
+  collision_detection::CollisionResult c_res;
+  c_req.group_name = robot.getGroupName();
+  c_req.contacts = true;
+  c_req.max_contacts = 100;
+  c_req.max_contacts_per_pair = 5;
+  c_req.verbose = false;
+
+  g_planning_scene->checkCollision(c_req, c_res, *robot.robotState());
+
+  visualizeContactPoints(c_res);
 }
 
 int main(int argc, char** argv)
@@ -298,13 +303,14 @@ int main(int argc, char** argv)
   // Empty group name means the entire robot will be checked
   req.group_name = "";
   std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-  planning_scene->getCollisionEnv()->checkRobotCollision(req, res, state);
+  planning_scene->checkCollision(req, res, state);
   std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
   ROS_INFO_STREAM("Collision distance for all links: " << res.distance);
   std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
   ROS_INFO_STREAM("Collision check runtime: " << time_span.count());
+  visualizeContactPoints(res);
 
-  // Now check for a specific link
+  // Now check for a specific group
   visual_tools.prompt("Press 'next' to perform a distance check for the hand only.");
   req.group_name = "hand";
   res.clear();
