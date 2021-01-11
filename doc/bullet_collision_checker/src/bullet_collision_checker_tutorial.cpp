@@ -310,8 +310,13 @@ int main(int argc, char** argv)
   ROS_INFO_STREAM("Collision check runtime: " << time_span.count());
   visualizeContactPoints(res);
 
-  // Now check for a specific group
+  // Now modifiy the robot position a bit and check for a specific group
+  joint_4 = -1.71;
+  state.setJointPositions("panda_joint4", &joint_4);
+  state.update();
+  visual_tools.publishRobotState(state);
   visual_tools.prompt("Press 'next' to perform a distance check for the hand only.");
+  // Note: as of Jan 11, 2021, req.group_name has no effect for Bullet collisions. It always checks the entire robot.
   req.group_name = "hand";
   res.clear();
   t1 = std::chrono::high_resolution_clock::now();
