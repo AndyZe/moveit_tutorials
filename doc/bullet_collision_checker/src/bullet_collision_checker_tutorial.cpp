@@ -328,14 +328,20 @@ int main(int argc, char** argv)
   ROS_INFO_STREAM("Collision check runtime: " << time_span.count());
 
   // Now, perform a collision check from 2 threads at once, to demonstrate thread safety
+  visual_tools.prompt("Press 'next' to run multi-threaded collision checks.");
   collision_detection::CollisionResult res1;
   collision_detection::CollisionResult res2;
+  // For thread safety, copy these variables
+  robot_state::RobotState state1 = state;
+  robot_state::RobotState state2 = state;
+  collision_detection::CollisionRequest req1 = req;
+  collision_detection::CollisionRequest req2 = req;
   for (size_t i = 0; i < 10; ++i)
   {
     res1.clear();
     res2.clear();
-    std::thread first([&planning_scene, &req, &res1]{planning_scene->checkCollision(req, res1);});
-    std::thread second([&planning_scene, &req, &res2]{planning_scene->checkCollision(req, res2);});
+    std::thread first([&planning_scene, &req1, &res1, &state1]{planning_scene->checkCollision(req1, res1, state1);});
+    std::thread second([&planning_scene, &req2, &res2, &state2]{planning_scene->checkCollision(req2, res2, state2);});
 
     ROS_INFO_STREAM("Distance 1: " << res1.distance);
     ROS_INFO_STREAM("Distance 2: " << res2.distance);
@@ -343,8 +349,13 @@ int main(int argc, char** argv)
 
     first.join();
     second.join();
-  }
 
+
+    // // Single-threaded checks work great
+    // res1.clear();
+    // planning_scene->checkCollision(req, res1);
+    // ROS_INFO_STREAM("Distance 1: " << res1.distance);
+  }
   // END_SUB_TUTORIAL
 
   // BEGIN_SUB_TUTORIAL CCD_3
