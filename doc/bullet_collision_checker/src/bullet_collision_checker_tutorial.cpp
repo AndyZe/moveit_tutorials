@@ -48,6 +48,7 @@
 #include <moveit/robot_state/conversions.h>
 #include <ros/ros.h>
 #include <tf2_eigen/tf2_eigen.h>
+#include <thread>
 #include <moveit/utils/robot_model_test_utils.h>
 
 auto g_planning_scene = std::unique_ptr<planning_scene::PlanningScene>();
@@ -325,6 +326,25 @@ int main(int argc, char** argv)
   ROS_INFO_STREAM("Collision distance for the hand group only: " << res.distance);
   time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
   ROS_INFO_STREAM("Collision check runtime: " << time_span.count());
+
+  // Now, perform a collision check from 2 threads at once, to demonstrate thread safety
+  collision_detection::CollisionResult res1;
+  collision_detection::CollisionResult res2;
+  for (size_t i = 0; i < 10; ++i)
+  {
+    res1.clear();
+    res2.clear();
+    std::thread first([&planning_scene, &req, &res1]{planning_scene->checkCollision(req, res1);});
+    std::thread second([&planning_scene, &req, &res2]{planning_scene->checkCollision(req, res2);});
+
+    ROS_INFO_STREAM("Distance 1: " << res1.distance);
+    ROS_INFO_STREAM("Distance 2: " << res2.distance);
+    ROS_INFO_STREAM(" -- ");
+
+    first.join();
+    second.join();
+  }
+
   // END_SUB_TUTORIAL
 
   // BEGIN_SUB_TUTORIAL CCD_3
