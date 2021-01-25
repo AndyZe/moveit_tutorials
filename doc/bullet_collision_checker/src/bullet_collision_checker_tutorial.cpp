@@ -286,9 +286,24 @@ int main(int argc, char** argv)
   planning_scene->checkCollision(req, res);
   ROS_INFO_STREAM_NAMED("bullet_tutorial", (res.collision ? "In collision." : "Not in collision."));
 
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to perform a CCD check.");
+  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to perform a distance check between two links.");
 
   // BEGIN_SUB_TUTORIAL CCD_2
+  // Distance check between two links
+  collision_detection::DistanceRequest dis_req;
+  collision_detection::DistanceResult dis_res;
+  std::shared_ptr<collision_detection::CollisionDetectorAllocatorBullet> collision_det_allocation = std::make_shared<collision_detection::CollisionDetectorAllocatorBullet>();
+  const collision_detection::WorldPtr& world = planning_scene->getWorldNonConst();
+  collision_detection::CollisionEnvPtr collision_env = collision_det_allocation->allocateEnv(world, planning_scene->getRobotModel());
+  ROS_ERROR_STREAM(dis_req.active_components_only->size());
+  collision_env->distanceSelf(dis_req, dis_res, state);
+
+
+
+
+  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to perform a CCD check.");
+
+  // BEGIN_SUB_TUTORIAL CCD_3
   // For the CCD check, we display both robot states at the same time.
   moveit_msgs::DisplayRobotState msg_state_before;
   robot_state::robotStateToRobotStateMsg(state_before, msg_state_before.state);
