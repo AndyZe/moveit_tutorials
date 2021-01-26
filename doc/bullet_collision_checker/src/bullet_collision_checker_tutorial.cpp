@@ -104,7 +104,7 @@ void computeCollisionContactPoints(InteractiveRobot& robot)
 
   collision_detection::CollisionRequest c_req;
   collision_detection::CollisionResult c_res;
-  c_req.group_name = robot.getGroupName();
+  c_req.group_name = ""; // Empty --> check all collision objects
   c_req.contacts = true;
   c_req.max_contacts = 100;
   c_req.max_contacts_per_pair = 5;
@@ -164,7 +164,9 @@ int main(int argc, char** argv)
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     // The active collision detector is set from the planning scene using the specific collision detector allocator for
     // Bullet.
-    g_planning_scene->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorBullet::create());
+    // The true arg clears out any other collision algorithms, e.g. FCL. More than one CollisionDetector is an advanced
+    // feature that is not well-tested and degrades perfomance slightly.
+    g_planning_scene->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorBullet::create(), true /* exclusive */);
     // For understanding the interactive interactive_robot, please refer to the Visualizing Collisions tutorial.
     // CALL_SUB_TUTORIAL CCD
     // CALL_SUB_TUTORIAL CCD_2
@@ -209,7 +211,7 @@ int main(int argc, char** argv)
   // again set as the active collision detector.
   robot_model::RobotModelPtr robot_model = moveit::core::loadTestingRobotModel("panda");
   auto planning_scene = std::make_shared<planning_scene::PlanningScene>(robot_model);
-  planning_scene->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorBullet::create());
+  planning_scene->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorBullet::create(), true /* exclusive */);
 
   // The box is added and the robot brought into its position.
   Eigen::Isometry3d box_pose{ Eigen::Isometry3d::Identity() };
@@ -289,17 +291,11 @@ int main(int argc, char** argv)
   visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to perform a distance check between two links.");
 
   // BEGIN_SUB_TUTORIAL CCD_2
-  // Distance check between two links
-  collision_detection::DistanceRequest dis_req;
-  collision_detection::DistanceResult dis_res;
-  std::shared_ptr<collision_detection::CollisionDetectorAllocatorBullet> collision_det_allocation = std::make_shared<collision_detection::CollisionDetectorAllocatorBullet>();
-  const collision_detection::WorldPtr& world = planning_scene->getWorldNonConst();
-  collision_detection::CollisionEnvPtr collision_env = collision_det_allocation->allocateEnv(world, planning_scene->getRobotModel());
-  ROS_ERROR_STREAM(dis_req.active_components_only->size());
-  collision_env->distanceSelf(dis_req, dis_res, state);
-
-
-
+  // Distance check for a specific joint group
+  req.group_name = "hand";
+  res.clear();
+  planning_scene->checkCollision(req, res);
+  ROS_INFO_STREAM_NAMED("bullet_tutorial", (res.collision ? "In collision." : "Not in collision."));
 
   visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to perform a CCD check.");
 
