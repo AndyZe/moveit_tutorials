@@ -104,7 +104,7 @@ void computeCollisionContactPoints(InteractiveRobot& robot)
 
   collision_detection::CollisionRequest c_req;
   collision_detection::CollisionResult c_res;
-  c_req.group_name = ""; // Empty --> check all collision objects
+  c_req.group_name = ""; //"panda_arm"; // Empty --> check all collision objects
   c_req.contacts = true;
   c_req.max_contacts = 100;
   c_req.max_contacts_per_pair = 5;
@@ -172,11 +172,41 @@ int main(int argc, char** argv)
     // CALL_SUB_TUTORIAL CCD_2
     // END_TUTORIAL
 
+    // A floating cube to interact with
     Eigen::Isometry3d world_cube_pose;
     double world_cube_size;
     interactive_robot.getWorldGeometry(world_cube_pose, world_cube_size);
     g_world_cube_shape = std::make_shared<shapes::Box>(world_cube_size, world_cube_size, world_cube_size);
     g_planning_scene->getWorldNonConst()->addToObject("world_cube", g_world_cube_shape, world_cube_pose);
+
+    // Attach another cube to the robot
+    geometry_msgs::Pose identity_pose;
+    identity_pose.orientation.w = 1;
+
+    moveit_msgs::CollisionObject attached_cube;
+    attached_cube.id = "object0";
+    shape_msgs::SolidPrimitive cube_primitive;
+    cube_primitive.type = cube_primitive.BOX;
+    cube_primitive.dimensions =  {1, 1, 1};
+    attached_cube.primitives.resize(1);
+    attached_cube.primitives[0] = cube_primitive;
+    attached_cube.primitive_poses.resize(1);
+    attached_cube.primitive_poses[0] = identity_pose;
+    std::string attach_link = "panda_link0";
+    attached_cube.header.frame_id = attach_link;
+    attached_cube.operation = attached_cube.ADD;
+
+    moveit_msgs::AttachedCollisionObject attach_object;
+    attach_object.object = attached_cube;
+    attach_object.object.id = "attached_cube";
+    attach_object.link_name = attach_link;
+    attach_object.object.header.frame_id = attach_link;
+    attach_object.object.header.stamp = ros::Time::now();
+    attach_object.object.operation = attach_object.object.ADD;
+    attach_object.object.pose = identity_pose;
+    ROS_ERROR_STREAM(attach_object);
+    g_planning_scene->processAttachedCollisionObjectMsg(attach_object);
+    g_planning_scene->printKnownObjects(std::cout);
 
     // Create a marker array publisher for publishing contact points
     g_marker_array_publisher = std::make_unique<ros::Publisher>(

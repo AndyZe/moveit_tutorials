@@ -12,7 +12,7 @@
   </node>
 
   <!-- If needed, broadcast static tf2 for robot root -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_broadcaster_0" args="0 0 0 0 0 1 /world/panda_link0 /panda_link0 10" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_broadcaster_0" args="0 0 0 0 0 1 /world/panda_link0 /panda_link0" />
 
   <!-- launch interactivity_tutorial -->
   <node name="bullet_collision_tutorial" pkg="moveit_tutorials" type="bullet_collision_checker_tutorial" respawn="false" output="screen">
