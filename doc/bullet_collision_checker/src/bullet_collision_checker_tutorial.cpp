@@ -104,7 +104,7 @@ void computeCollisionContactPoints(InteractiveRobot& robot)
 
   collision_detection::CollisionRequest c_req;
   collision_detection::CollisionResult c_res;
-  c_req.group_name = ""; //"panda_arm"; // Empty --> check all collision objects
+  c_req.group_name = "hand"; //"panda_arm"; // Empty --> check all collision objects
   c_req.contacts = true;
   c_req.max_contacts = 100;
   c_req.max_contacts_per_pair = 5;
@@ -187,11 +187,13 @@ int main(int argc, char** argv)
     attached_cube.id = "object0";
     shape_msgs::SolidPrimitive cube_primitive;
     cube_primitive.type = cube_primitive.BOX;
-    cube_primitive.dimensions =  {1, 1, 1};
+    cube_primitive.dimensions =  {0.3, 0.3, 0.3};
     attached_cube.primitives.resize(1);
     attached_cube.primitives[0] = cube_primitive;
     attached_cube.primitive_poses.resize(1);
     attached_cube.primitive_poses[0] = identity_pose;
+    // Put the cube slightly away from the robot base
+    attached_cube.primitive_poses[0].position.x = 0.5;
     std::string attach_link = "panda_link0";
     attached_cube.header.frame_id = attach_link;
     attached_cube.operation = attached_cube.ADD;
@@ -206,6 +208,8 @@ int main(int argc, char** argv)
     attach_object.object.pose = identity_pose;
     ROS_ERROR_STREAM(attach_object);
     g_planning_scene->processAttachedCollisionObjectMsg(attach_object);
+    // Display the attached object in RViz
+    *interactive_robot.robotState() = g_planning_scene->getCurrentState();
     g_planning_scene->printKnownObjects(std::cout);
 
     // Create a marker array publisher for publishing contact points
