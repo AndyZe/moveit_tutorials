@@ -240,6 +240,17 @@ int main(int argc, char** argv)
 
   robot_state::RobotState state_before(state);
 
+  // Do a distance check
+  collision_detection::DistanceRequest distance_req;
+  distance_req.enable_nearest_points = false;
+  distance_req.enable_signed_distance = true;
+  distance_req.type = collision_detection::DistanceRequestType::GLOBAL;
+  distance_req.distance_threshold = 0.02;  // meters
+  collision_detection::DistanceResult distance_res;
+
+  planning_scene->getCollisionEnv()->distanceRobot(distance_req, distance_res, state_before);
+  ROS_ERROR_STREAM(distance_res.minimum_distance.distance);
+
   // Finally, a collision check is performed and the result printed to the terminal.
   collision_detection::CollisionResult res;
   collision_detection::CollisionRequest req;
