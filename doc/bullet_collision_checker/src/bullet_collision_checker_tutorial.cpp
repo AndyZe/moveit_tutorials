@@ -41,8 +41,8 @@
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/planning_scene/planning_scene.h>
-#include <moveit/collision_detection_bullet/collision_env_bullet.h>
-#include <moveit/collision_detection_bullet/collision_detector_allocator_bullet.h>
+#include <moveit/collision_detection_fcl/collision_env_fcl.h>
+#include <moveit/collision_detection_fcl/collision_detector_allocator_fcl.h>
 #include <moveit/collision_detection/collision_tools.h>
 #include <moveit/robot_state/conversions.h>
 #include <tf2_eigen/tf2_eigen.h>
@@ -166,8 +166,9 @@ int main(int argc, char** argv)
     // Bullet. The second argument indicates that Bullet will be the exclusive collision detection algorithm; the
     // default FCL will not be available anymore. Having one exclusive collision detection algorithm helps performance
     // a bit and is much more common.
-    g_planning_scene->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorBullet::create(),
+    g_planning_scene->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorFCL::create(),
                                                  true /* exclusive */);
+    ROS_ERROR("Allocating FCL");
     // For understanding the interactive interactive_robot, please refer to the Visualizing Collisions tutorial.
     // CALL_SUB_TUTORIAL CCD
     // CALL_SUB_TUTORIAL CCD_2
@@ -212,7 +213,7 @@ int main(int argc, char** argv)
   // again set as the active collision detector.
   robot_model::RobotModelPtr robot_model = moveit::core::loadTestingRobotModel("panda");
   auto planning_scene = std::make_shared<planning_scene::PlanningScene>(robot_model);
-  planning_scene->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorBullet::create(),
+  planning_scene->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorFCL::create(),
                                              /* exclusive = */ true);
 
   // The box is added and the robot brought into its position.
